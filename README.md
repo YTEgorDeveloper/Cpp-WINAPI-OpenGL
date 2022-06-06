@@ -9,4 +9,5 @@
 ”становка freeglut:
 
 —копировать Header файлы из папки freeglut installation в gl дл€ Visual Studio C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\um\gl
+
 ”бедитьс€, что freeglut.lib файл находитс€ в каталоге с проектом, иначе возникнет ошибка при компил€ции
