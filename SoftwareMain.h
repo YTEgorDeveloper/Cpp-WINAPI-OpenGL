@@ -2,11 +2,12 @@
 
 /*
   - Default WINAPI and OpenGL window example
-  - Basic settings are done, simple triangle is rendered
+  - Basic settings are done, created camera control menu buttons
+  - Using EgorDeveloper's libraries Components.h
   - By: EgorDeveloper
   -
-  - SoftwareMain.h:
-  - Contains main app definitions, function prototypes, realisations
+  - SoftwareMain.cpp:
+  - Contains WINMAIN and WindowProcedure realisations
 */
 
 #include "Components.h"
@@ -33,7 +34,10 @@ HWND    hWnd, GLWnd;			/* window */
 
 HMENU	CameraPosMenu, CameraModeMenu;
 
+//Scene renderer component
 Renderer renderer = Renderer(Camera(Vector3(3, 4, 3), Vector3(0, 1, 0)));
+
+//Camera position points
 std::vector<Vector3> points = Vector3::CirclePoints(4, 6, Vector3(0, 3.5f, 0), Quaternion::EulerAngles(0.07f, 0.5f, 0.059f));
 
 LRESULT CALLBACK MainWndProcedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);

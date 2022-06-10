@@ -6,7 +6,8 @@
 
 /*
   - Default WINAPI and OpenGL window example
-  - Basic settings are done, simple triangle is rendered
+  - Basic settings are done, created camera control menu buttons
+  - Using EgorDeveloper's libraries Components.h
   - By: EgorDeveloper
   - 
   - SoftwareMain.cpp:
