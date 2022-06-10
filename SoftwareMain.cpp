@@ -1,3 +1,4 @@
+#include <vector>
 #include <Windows.h>
 #include <gl/freeglut.h>
 
@@ -16,13 +17,46 @@
 
 LRESULT CALLBACK MainWndProcedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 	switch (message) {
+	
+	case WM_COMMAND:
+		switch (wParam) {
+		
+		case CMDCameraOrtho:
+			renderer.camera.SetOrtho();
+			renderer.init();
+			CheckMenuItem(CameraModeMenu, 0, MF_BYPOSITION | MF_CHECKED);
+			CheckMenuItem(CameraModeMenu, 1, MF_BYPOSITION | MF_UNCHECKED);
+			break;
+		case CMDCameraPersp:
+			renderer.camera.SetPerspective();
+			renderer.init();
+			CheckMenuItem(CameraModeMenu, 1, MF_BYPOSITION | MF_CHECKED);
+			CheckMenuItem(CameraModeMenu, 0, MF_BYPOSITION | MF_UNCHECKED);
+			break;
+		case CMDCameraPos1:
+			renderer.camera.SetCameraPosition(points[0]);
+			break;
+		case CMDCameraPos2:
+			renderer.camera.SetCameraPosition(points[1]);
+			break;
+		case CMDCameraPos3:
+			renderer.camera.SetCameraPosition(points[2]);
+			break;
+		case CMDCameraPos4:
+			renderer.camera.SetCameraPosition(points[3]);
+			break;
+		
+		default: return 0;
+		}
+		return 0;
 
 	case WM_CLOSE:
 		ExitSoftware();
 		break;
 
 	case WM_CREATE:
-
+		MainWndAddMenus(hWnd);
+		CheckMenuItem(CameraModeMenu, 1, MF_BYPOSITION | MF_CHECKED);
 		break;
 
 	default: return DefWindowProc(hWnd, message, wParam, lParam);
@@ -40,17 +74,12 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);
 
+	renderer.init();
+
+	Quaternion q = Quaternion::EulerAngles(0, PI / 4, 0);
+	Mesh m = Mesh::GenerateCuboid(Vector3(1, 1, 1));
+	Material mat = Material(Material::diffuse, 0, 0.15f);
 	
-	//Setup OpenGL render
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluPerspective(60, (double)GLWindowSizeX / (double)GLWindowSizeY, 0.1, 50);
-	glMatrixMode(GL_MODELVIEW);
-	glPointSize(5);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);			//for no cull use: glDisable(GL_CULL_FACE);
-
-
 	MSG msg;
 
 	while (GetMessage(&msg, nullptr, 0, 0)) {
@@ -59,30 +88,15 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 
 		
 		/*				Frame draw begin			*/
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-		gluLookAt(
-			5, 1, 5,
-			0, 0, 0,
-			0, 1, 0
-		);
+		renderer.BeginFrame();
 
-		
-		glBegin(GL_TRIANGLES);		//Begin sending triangles to render
-		glColor3ub(200, 10, 10);
-		glVertex3f(1, 0, 0);
-		glColor3ub(10, 200, 10);
-		glVertex3f(0, 2, 1);
-		glColor3ub(10, 10, 200);
-		glVertex3f(-1, 0, 1);
-		glEnd();					//End sending triangles to render
+		renderer.RenderGrid(-5, 5, 9, -5, 5, 9, 0, false, Color(50, 50, 50));
+		renderer.RenderPoints(points, Color(220, 150, 10));
+		renderer.RenderMesh(m, Vector3(0.1f), q, Color(150, 220, 10), mat);
 
-		glFlush();
+		renderer.EndFrame();
 		/*				Frame draw end				*/
 
-
 	}
-
 	return (int)msg.wParam;
 }

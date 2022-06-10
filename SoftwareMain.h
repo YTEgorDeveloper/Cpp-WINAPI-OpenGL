@@ -9,17 +9,32 @@
   - Contains main app definitions, function prototypes, realisations
 */
 
-#define MainWindowSizeX 1600
-#define MainWindowSizeY 900
-#define GLWindowSizeX 1600
-#define GLWindowSizeY 900
+#include "Components.h"
 
-#define GLWindowPosX 0
-#define GLWindowPosY 0
+#define MainWindowSizeX		1600
+#define MainWindowSizeY		958
+#define GLWindowSizeX		1600
+#define GLWindowSizeY		900
+
+#define GLWindowPosX		0
+#define GLWindowPosY		0
+
+#define CMDCameraPos1		10
+#define CMDCameraPos2		11
+#define CMDCameraPos3		12
+#define CMDCameraPos4		13
+#define CMDCameraOrtho		14
+#define CMDCameraPersp		15
+
 
 HDC     hDC;					/* device context */
 HGLRC   hRC;					/* render context (opengl context) */
 HWND    hWnd, GLWnd;			/* window */
+
+HMENU	CameraPosMenu, CameraModeMenu;
+
+Renderer renderer = Renderer(Camera(Vector3(3, 4, 3), Vector3(0, 1, 0)));
+std::vector<Vector3> points = Vector3::CirclePoints(4, 6, Vector3(0, 3.5f, 0), Quaternion::EulerAngles(0.07f, 0.5f, 0.059f));
 
 LRESULT CALLBACK MainWndProcedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow);
@@ -72,4 +87,24 @@ BOOL CreateRenderContext(HINSTANCE hInstance, LPCWSTR mainWndName) {
 	hRC = wglCreateContext(hDC);
 
 	return (hRC != NULL);
+}
+
+void MainWndAddMenus(HWND hWndMain) {
+	HMENU RootMenu = CreateMenu();
+	
+	CameraPosMenu = CreateMenu();
+	CameraModeMenu = CreateMenu();
+	
+	AppendMenu(CameraPosMenu, MF_STRING, CMDCameraPos1, L"Position 1");
+	AppendMenu(CameraPosMenu, MF_STRING, CMDCameraPos2, L"Position 2");
+	AppendMenu(CameraPosMenu, MF_STRING, CMDCameraPos3, L"Position 3");
+	AppendMenu(CameraPosMenu, MF_STRING, CMDCameraPos4, L"Position 4");
+
+	AppendMenu(CameraModeMenu, MF_STRING, CMDCameraOrtho, L"Ortho");
+	AppendMenu(CameraModeMenu, MF_STRING, CMDCameraPersp, L"Perspective");
+
+	AppendMenu(RootMenu, MF_POPUP, (UINT_PTR)CameraPosMenu, L"Position");
+	AppendMenu(RootMenu, MF_POPUP, (UINT_PTR)CameraModeMenu, L"View mode");
+
+	SetMenu(hWndMain, RootMenu);
 }

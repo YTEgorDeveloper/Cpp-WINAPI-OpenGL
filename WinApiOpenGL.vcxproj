@@ -141,6 +141,9 @@
     <ClCompile Include="SoftwareMain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Components.h" />
+    <ClInclude Include="Geometry.h" />
+    <ClInclude Include="Graphics.h" />
     <ClInclude Include="SoftwareMain.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
