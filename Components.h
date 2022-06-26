@@ -65,6 +65,7 @@ public:
 			axis.x, axis.y, axis.z
 		);
 	}
+	float GetFarClip(void) const { return clipFar; }
 	Vector3 GetAxis(void) const { return axis; }
 	Vector3 GetCameraPosition(void) const { return position; }
 	Vector3 GetTargetPosition(void) const { return target; }
@@ -115,13 +116,18 @@ public:
 	}
 };
 class Renderer {
-private:
-	float clamp(float val) const { return val < -1 ? -1 : val > 1 ? 1 : val; }
-	float diffusePoint(float x, float roughness) const { roughness = 1 - roughness; x = (roughness * fabsf(x) - roughness); return 1 - x * x; }
-	float realisticPoint(float x, float distClamp, float roughness) const { return (((fabsf(x) + 1) * 1.5f) * diffusePoint(x, roughness) - ((0.5f + roughness) * distClamp)); }
 public:
 	Camera camera;
 
+private:
+	///<summary>
+	///Returns value clapmed between min and max
+	///</summary>
+	float clamp(float val, const float& min, const float& max) const { return val < min ? min : val > max ? max : val; }
+	float diffusePoint(float angle, float roughness) const { roughness = 1 - roughness; angle = (roughness * fabsf(angle) - roughness); return 1 - angle * angle; }
+	float realisticPoint(float angle, float distance, float roughness) const { return fabsf(angle) * diffusePoint(angle, roughness) * (2 * roughness - clamp(distance / camera.GetFarClip(), 0, 1)); }
+
+public:
 	Renderer(Camera cameraToUse) { camera = cameraToUse; }
 
 	static void SendVertex(const Vertex3& vertex) {
@@ -178,7 +184,8 @@ private:
 	///Sends triangle to render with given material. Prefer this function. Must be called only in glBegin(GL_TRIANGLES) event
 	///</summary>
 	void RenderTriangleNoCall(const Triangle& triangle, const Material& material) {
-		float normalAngle, centerDist;
+		float normalAngle;
+		bool isBackface;
 
 		switch (material.shader) {
 		case Material::unlit:
@@ -189,17 +196,26 @@ private:
 		case Material::diffuse:
 			normalAngle = diffusePoint(Vector3::Angle(camera.Normal(), triangle.Normal()), material.roughness);
 
-			SendVertex(triangle.a, Color(triangle.a.color) * normalAngle);
-			SendVertex(triangle.b, Color(triangle.b.color) * normalAngle);
-			SendVertex(triangle.c, Color(triangle.c.color) * normalAngle);
+			SendVertex(triangle.a, Color::Lerp(triangle.a.color, material.metal, material.metallic) * normalAngle);
+			SendVertex(triangle.b, Color::Lerp(triangle.b.color, material.metal, material.metallic) * normalAngle);
+			SendVertex(triangle.c, Color::Lerp(triangle.c.color, material.metal, material.metallic) * normalAngle);
 			break;
 		case Material::realistic:
 			normalAngle = Vector3::Angle(camera.Normal(), triangle.Normal());
-			centerDist = Vector3::Distance(camera.GetCameraPosition(), triangle.Center()) + 0.01f;
 
-			SendVertex(triangle.a, Color::Lerp(triangle.a.color, material.metal, material.metallic) * realisticPoint(normalAngle, Vector3::Distance(camera.GetCameraPosition(), triangle.a.position) / centerDist, material.roughness));
-			SendVertex(triangle.b, Color::Lerp(triangle.b.color, material.metal, material.metallic) * realisticPoint(normalAngle, Vector3::Distance(camera.GetCameraPosition(), triangle.b.position) / centerDist, material.roughness));
-			SendVertex(triangle.c, Color::Lerp(triangle.c.color, material.metal, material.metallic) * realisticPoint(normalAngle, Vector3::Distance(camera.GetCameraPosition(), triangle.c.position) / centerDist, material.roughness));
+			SendVertex(triangle.a, Color::Lerp(triangle.a.color, material.metal, material.metallic) * realisticPoint(normalAngle, Vector3::Distance(camera.GetCameraPosition(), triangle.a.position), material.roughness));
+			SendVertex(triangle.b, Color::Lerp(triangle.b.color, material.metal, material.metallic) * realisticPoint(normalAngle, Vector3::Distance(camera.GetCameraPosition(), triangle.b.position), material.roughness));
+			SendVertex(triangle.c, Color::Lerp(triangle.c.color, material.metal, material.metallic) * realisticPoint(normalAngle, Vector3::Distance(camera.GetCameraPosition(), triangle.c.position), material.roughness));
+			break;
+		case Material::faceorient:
+			normalAngle = Vector3::Angle(camera.Normal(), triangle.Normal());
+			isBackface = normalAngle < 0;
+			normalAngle = diffusePoint(normalAngle, material.roughness);
+			
+			SendVertex(triangle.a, Color::Lerp(triangle.a.color, isBackface ? material.facefront : material.faceback, material.faceorientfactor) * normalAngle);
+			SendVertex(triangle.b, Color::Lerp(triangle.b.color, isBackface ? material.facefront : material.faceback, material.faceorientfactor) * normalAngle);
+			SendVertex(triangle.c, Color::Lerp(triangle.c.color, isBackface ? material.facefront : material.faceback, material.faceorientfactor) * normalAngle);
+			break;
 		default: break;
 		}
 	}

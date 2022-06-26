@@ -36,17 +36,23 @@ LRESULT CALLBACK MainWndProcedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM
 			break;
 		case CMDCameraPos1:
 			renderer.camera.SetCameraPosition(points[0]);
+			cameraIsFree = false;
 			break;
 		case CMDCameraPos2:
 			renderer.camera.SetCameraPosition(points[1]);
+			cameraIsFree = false;
 			break;
 		case CMDCameraPos3:
 			renderer.camera.SetCameraPosition(points[2]);
+			cameraIsFree = false;
 			break;
 		case CMDCameraPos4:
 			renderer.camera.SetCameraPosition(points[3]);
+			cameraIsFree = false;
 			break;
-		
+		case CMDCameraPosFree:
+			cameraIsFree = true;
+			break;
 		default: return 0;
 		}
 		return 0;
@@ -78,9 +84,15 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 	renderer.init();
 
 	Quaternion q = Quaternion::EulerAngles(0, PI / 4, 0);
-	Mesh m = Mesh::GenerateCuboid(Vector3(1, 1, 1));
-	Material mat = Material(Material::diffuse, 0, 0.15f);
+	Mesh m = Mesh::GenerateCuboid(Vector3(2, 2, 2));
 	
+	Material matUnlit	= Material(Material::unlit);
+	Material matDiffuse = Material(Material::diffuse, 0.1f, 0.2f);
+	Material matRealist = Material(Material::realistic, 0.3f, 1.0f);
+	Material matOrient	= Material(Material::faceorient, 0.1f, 0.2f);
+
+	float time = 0;
+
 	MSG msg;
 
 	while (GetMessage(&msg, nullptr, 0, 0)) {
@@ -88,12 +100,18 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 		DispatchMessage(&msg);
 
 		
+		if (cameraIsFree) {
+			renderer.camera.SetCameraPosition(Vector3(5 * cosf(time), 4, 5 * sinf(time)));
+			time += 0.01793473f;
+		}
+
+
 		/*				Frame draw begin			*/
 		renderer.BeginFrame();
 
 		renderer.RenderGrid(-5, 5, 9, -5, 5, 9, 0, false, Color(50, 50, 50));
 		renderer.RenderPoints(points, Color(220, 150, 10));
-		renderer.RenderMesh(m, Vector3(0.1f), q, Color(150, 220, 10), mat);
+		renderer.RenderMesh(m, Vector3(0.1f), q, Color(150, 220, 10), matRealist);
 
 		renderer.EndFrame();
 		/*				Frame draw end				*/

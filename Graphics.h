@@ -59,7 +59,8 @@ public:
 	enum Shader {
 		unlit = 0,
 		diffuse = 1,
-		realistic = 2
+		realistic = 2,
+		faceorient = 3
 	};
 	///<summary>
 	///Shader of this material. Describes how to render an object
@@ -70,13 +71,21 @@ public:
 	///</summary>
 	float metallic, roughness;
 	///<summary>
-	///Metal color lerp to. By default is (19, 28, 31)
+	///Metal color lerp to. Grey by default
 	///</summary>
 	Color metal;
+	///<summary>
+	///Face orientation indicator color lerp to. Used only in faceorient shader
+	///</summary>
+	Color facefront = Color(65, 93, 255), faceback = Color(255, 40, 62);
+	///<summary>
+	///Face orientation t parameter for colors. Used only in faceorient shader
+	///</summary>
+	float faceorientfactor = 0.9f;
 
-	Material() { shader = Shader::unlit; metallic = 0; roughness = 1; metal = Color(19, 28, 31); }
-	Material(Shader shaderType) { shader = shaderType; metallic = 0; roughness = 1; metal = Color(19, 28, 31); }
-	Material(Shader shaderType, float Metallic, float Roughness) { shader = shaderType; metallic = Metallic; roughness = Roughness; metal = Color(19, 28, 31); }
+	Material() { shader = Shader::unlit; metallic = 0; roughness = 0; metal = Color(154, 160, 161); }
+	Material(Shader shaderType) { shader = shaderType; metallic = 0; roughness = 0.8f; metal = Color(154, 160, 161); }
+	Material(Shader shaderType, float Metallic, float Roughness) { shader = shaderType; metallic = Metallic * 0.75f; roughness = Roughness; metal = Color(108, 107, 117); }
 };
 
 typedef struct Vertex3 {
@@ -193,22 +202,21 @@ public:
 		Mesh nCone = Mesh();
 		
 		if (sides < 2) { return nCone; }
-		std::vector<Vector3> circle = Vector3::CirclePoints(sides, radius, Vector3(0, -height / 2.0f, 0), Quaternion(0, 0, 0, 1));
+		std::vector<Vector3> circle = Vector3::CirclePoints(sides, radius, Vector3(0, -height / 2.0f, 0), Quaternion());
 		
 		nCone.vertices.push_back(Vector3(0, height / 2.0f, 0));
 		nCone.vertices.insert(nCone.vertices.end(), circle.begin(), circle.end());
 
-		for (unsigned i = 1; i < sides; ++i) {
-			nCone.triangles.push_back(i + 1);
-			nCone.triangles.push_back(i);
+		if (height > 0) {
+			for (unsigned i = 1; i < sides; ++i) {
+				nCone.triangles.push_back(i + 1);
+				nCone.triangles.push_back(i);
+				nCone.triangles.push_back(0);
+			}
+			nCone.triangles.push_back(1);
+			nCone.triangles.push_back(sides);
 			nCone.triangles.push_back(0);
 		}
-		nCone.triangles.push_back(1);
-		nCone.triangles.push_back(sides);
-		nCone.triangles.push_back(0);
-		
-		/*
-		if (height > 0) {}
 		else {
 			for (unsigned i = 1; i < sides; ++i) {
 				nCone.triangles.push_back(i);
@@ -220,7 +228,6 @@ public:
 			nCone.triangles.push_back(0);
 		}
 		return nCone;
-		*/
 	}
 	///<summary>
 	///Generates Cylinder mesh with given parameters

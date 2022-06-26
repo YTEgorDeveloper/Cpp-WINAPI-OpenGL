@@ -6,7 +6,7 @@
   - Using EgorDeveloper's libraries Components.h
   - By: EgorDeveloper
   -
-  - SoftwareMain.cpp:
+  - SoftwareMain.h:
   - Contains WINMAIN and WindowProcedure realisations
 */
 
@@ -24,14 +24,16 @@
 #define CMDCameraPos2		11
 #define CMDCameraPos3		12
 #define CMDCameraPos4		13
-#define CMDCameraOrtho		14
-#define CMDCameraPersp		15
+#define CMDCameraPosFree	14
+#define CMDCameraOrtho		15
+#define CMDCameraPersp		16
 
 
 HDC     hDC;					/* device context */
 HGLRC   hRC;					/* render context (opengl context) */
 HWND    hWnd, GLWnd;			/* window */
 
+bool cameraIsFree = false;
 HMENU	CameraPosMenu, CameraModeMenu;
 
 //Scene renderer component
@@ -103,6 +105,7 @@ void MainWndAddMenus(HWND hWndMain) {
 	AppendMenu(CameraPosMenu, MF_STRING, CMDCameraPos2, L"Position 2");
 	AppendMenu(CameraPosMenu, MF_STRING, CMDCameraPos3, L"Position 3");
 	AppendMenu(CameraPosMenu, MF_STRING, CMDCameraPos4, L"Position 4");
+	AppendMenu(CameraPosMenu, MF_STRING, CMDCameraPosFree, L"Free camera");
 
 	AppendMenu(CameraModeMenu, MF_STRING, CMDCameraOrtho, L"Ortho");
 	AppendMenu(CameraModeMenu, MF_STRING, CMDCameraPersp, L"Perspective");
